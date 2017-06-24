@@ -24,7 +24,9 @@
         "give me another",
         "give me a new fact",
         "give me a cat fact",
-        "i want a cat fact"
+        "i want a cat fact",
+        "i want to know something about cats",
+        "tell me something about cats"
       ],
       "slots": []
     }

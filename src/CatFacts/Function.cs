@@ -46,6 +46,15 @@ using Newtonsoft.Json.Linq;
 namespace CatFacts {
     public class Function {
 
+        //--- Class Fields ---
+        private static readonly string[] RANDOM_FACT_INTROS = { 
+            "Here is your cat fact.",
+            "Did you know?",
+            "I thought this was interesting.",
+            "Here's something cool.",
+            "Here's a good one."
+        };
+
         //--- Fields ---
         private readonly AmazonDynamoDBClient _dynamoClient;
         private readonly Random _random;
@@ -100,7 +109,7 @@ namespace CatFacts {
                         LambdaLogger.Log($"*** INFO: fact request intent ({intent.Intent.Name})\n");
                         switch(command) {
                             case FactCommandType.GetFact:
-                                responses = new[] { new FactResponseSay(GetFact()) };
+                                responses = GetFactResponse();
                                 break;
                             default:
                                 // should never happen
@@ -195,12 +204,26 @@ namespace CatFacts {
             };
         }
 
-        private string GetFact() {
-            var id = _random.Next((int) _factCount - 1);
+        private IEnumerable<AFactResponse> GetFactResponse() {
+            var responses = new List<AFactResponse>();
+            var id = _random.Next((int) _factCount) + 1;
+            if(_random.Next(2) < 1) {
+                var randomIndex = _random.Next(RANDOM_FACT_INTROS.Length + 1);
+                if(randomIndex >= RANDOM_FACT_INTROS.Length) {
+                    responses.Add(new FactResponseSay($"Here is cat fact number {id}"));
+                } else {
+                    responses.Add(new FactResponseSay(RANDOM_FACT_INTROS[randomIndex]));
+                }
+            }
+            responses.Add(new FactResponseSay(GetFact(id)));
+            return responses;
+        }
+
+        private string GetFact(int factId) {
             var request = new GetItemRequest {
                 TableName = _tableName,
                 Key = new Dictionary<string, AttributeValue>() {{
-                    "Id", new AttributeValue() { N = id.ToString() }
+                    "Id", new AttributeValue() { N = factId.ToString() }
                 }}
             };
             var task = _dynamoClient.GetItemAsync(request);

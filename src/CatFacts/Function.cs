@@ -54,7 +54,7 @@ namespace CatFacts {
             "Here's something cool.",
             "Here's a good one."
         };
-
+        private static readonly string[] FACT_PREFIXES = { "", "Ok, ", "Sure, ", "Alright, " };
         //--- Fields ---
         private readonly AmazonDynamoDBClient _dynamoClient;
         private readonly Random _random;
@@ -92,7 +92,10 @@ namespace CatFacts {
                 // skill was activated without an intent
                 case LaunchRequest launch:
                     LambdaLogger.Log($"*** INFO: launch\n");
-                    responses = new[] { new FactResponseSay("Welcome to Cat Facts!") };
+                    responses = new AFactResponse[] { 
+                        new FactResponseSay("Welcome to Cat Facts!"),
+                        new FactResponseHelp()
+                    };
                     reprompt = new[] { new FactResponseHelp() };
                     return ResponseBuilder.Ask(
                         ConvertToSpeech(responses),
@@ -109,7 +112,20 @@ namespace CatFacts {
                         LambdaLogger.Log($"*** INFO: fact request intent ({intent.Intent.Name})\n");
                         switch(command) {
                             case FactCommandType.GetFact:
-                                responses = GetFactResponse();
+                                Slot factIdSlot;
+                                int factId;
+                                if(intent.Intent.Slots.TryGetValue("FactId", out factIdSlot) && int.TryParse(factIdSlot.Value, out factId)) {
+                                    if(factId < _factCount) {
+                                        responses = GetFactResponses(factId);
+                                    } else {
+                                        responses = new[] { 
+                                            new FactResponseSay($"I'm sorry, right now there are only {_factCount} facts in the database, so there is no cat fact number {factId}."),
+                                            new FactResponseSay("You can try again with another number, or say give me a cat fact for a random cat fact")
+                                        };
+                                    }
+                                } else {
+                                    responses = GetFactResponses();
+                                }
                                 break;
                             default:
                                 // should never happen
@@ -204,7 +220,7 @@ namespace CatFacts {
             };
         }
 
-        private IEnumerable<AFactResponse> GetFactResponse() {
+        private IEnumerable<AFactResponse> GetFactResponses() {
             var responses = new List<AFactResponse>();
             var id = _random.Next((int) _factCount) + 1;
             if(_random.Next(2) < 1) {
@@ -219,6 +235,18 @@ namespace CatFacts {
             return responses;
         }
 
+        private IEnumerable<AFactResponse> GetFactResponses(int factId) {
+            var responses = new List<AFactResponse>();
+            var prefix = FACT_PREFIXES[_random.Next(FACT_PREFIXES.Length)];
+            if(_random.Next(2) < 1) {
+                responses.Add(new FactResponseSay($"{prefix}here is cat fact number {factId}"));
+            } else {
+                responses.Add(new FactResponseSay($"{prefix} cat fact number {factId} is"));
+            }
+            responses.Add(new FactResponseSay(GetFact(factId)));
+            return responses;
+        }
+
         private string GetFact(int factId) {
             var request = new GetItemRequest {
                 TableName = _tableName,
@@ -229,8 +257,8 @@ namespace CatFacts {
             var task = _dynamoClient.GetItemAsync(request);
             task.Wait();
             AttributeValue fact;
-            if (task.Result.Item.TryGetValue("Fact", out fact)) {
-                LambdaLogger.Log($"INFO: Fact returned from database was: {fact.S}");
+            if(task.Result.Item.TryGetValue("Fact", out fact)) {
+                LambdaLogger.Log($"INFO: Fact returned from database was #{factId}: {fact.S}");
                 return fact.S;
             } else {
                 // GetFact();

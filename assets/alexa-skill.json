@@ -19,16 +19,40 @@
     {
       "name": "GetFact",
       "samples": [
-        "a fact",
+        "fact",
         "cat fact",
+        "get me another",
+        "get me a new fact",
+        "get me a cat fact",
         "give me another",
         "give me a new fact",
         "give me a cat fact",
+        "tell me another",
+        "tell me a new fact",
+        "tell me a cat fact",
         "i want a cat fact",
         "i want to know something about cats",
-        "tell me something about cats"
+        "tell me something about cats",
+        "cat fact {FactId}",
+        "cat fact number {FactId}",
+        "get me cat fact {FactId}",
+        "get me cat fact number {FactId}",
+        "give me cat fact {FactId}",
+        "give me cat fact number {FactId}",
+        "tell me cat fact {FactId}",
+        "tell me cat fact number {FactId}",
+        "i want cat fact {FactId}",
+        "i want cat fact number {FactId}",
+        "what is cat fact {FactId}",
+        "what is cat fact number {FactId}"
       ],
-      "slots": []
+      "slots": [
+        {
+          "name": "FactId",
+          "type": "AMAZON.NUMBER",
+          "samples": []
+        }
+      ]
     }
   ]
 }

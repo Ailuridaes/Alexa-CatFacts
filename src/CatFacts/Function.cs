@@ -266,7 +266,7 @@ namespace CatFacts {
             if(_random.Next(2) < 1) {
                 responses.Add(new FactResponseSay($"{prefix}here is cat fact number {factId}"));
             } else {
-                responses.Add(new FactResponseSay($"{prefix} cat fact number {factId} is"));
+                responses.Add(new FactResponseSay($"{prefix}cat fact number {factId} is"));
             }
             responses.Add(new FactResponseSay(GetFact(factId)));
             return responses;

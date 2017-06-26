@@ -6,7 +6,11 @@
     },
     {
       "name": "AMAZON.HelpIntent",
-      "samples": []
+      "samples": [
+        "help",
+        "info",
+        "information"
+      ]
     },
     {
       "name": "AMAZON.StopIntent",
@@ -33,6 +37,8 @@
         "i want a cat fact",
         "i want to know something about cats",
         "tell me something about cats",
+        "fact {FactId}",
+        "fact number {FactId}",
         "cat fact {FactId}",
         "cat fact number {FactId}",
         "get me cat fact {FactId}",
@@ -43,8 +49,14 @@
         "tell me cat fact number {FactId}",
         "i want cat fact {FactId}",
         "i want cat fact number {FactId}",
+        "what is fact {FactId}",
+        "what is fact number {FactId}",
         "what is cat fact {FactId}",
-        "what is cat fact number {FactId}"
+        "what is cat fact number {FactId}",
+        "what fact {FactId} is",
+        "what fact number {FactId} is",
+        "what cat fact {FactId} is",
+        "what cat fact number {FactId} is"
       ],
       "slots": [
         {

@@ -112,19 +112,33 @@ namespace CatFacts {
                         LambdaLogger.Log($"*** INFO: fact request intent ({intent.Intent.Name})\n");
                         switch(command) {
                             case FactCommandType.GetFact:
-                                Slot factIdSlot;
                                 int factId;
-                                if(intent.Intent.Slots.TryGetValue("FactId", out factIdSlot) && int.TryParse(factIdSlot.Value, out factId)) {
-                                    if(factId < _factCount) {
-                                        responses = GetFactResponses(factId);
+                                LambdaLogger.Log($"*** INFO: FactId slot value: {intent.Intent.Slots["FactId"].Value == null})\n");
+                                if(intent.Intent.Slots["FactId"].Value == null) {
+                                    responses = GetFactResponses();
+                                } else {
+
+                                    // Value supplied for FactId slot
+                                    // If value is valid, retrieve that fact. Otherwise, return appropriate feedback
+                                    if(int.TryParse(intent.Intent.Slots["FactId"].Value, out factId)) {
+                                        if(factId < _factCount) {
+                                            responses = GetFactResponses(factId);
+                                            break;
+                                        } else {
+                                            responses = new[] { 
+                                                new FactResponseSay($"I'm sorry, right now there are only {_factCount} facts in the database, so there is no cat fact number {factId}."),
+                                                new FactResponseSay("You can try again with another number, or say give me a cat fact for a random cat fact")
+                                            };
+                                        }
                                     } else {
+                                        
+                                        // Supplied value not parseable as a number
                                         responses = new[] { 
-                                            new FactResponseSay($"I'm sorry, right now there are only {_factCount} facts in the database, so there is no cat fact number {factId}."),
+                                            new FactResponseSay("I'm sorry, I could not find the cat fact you requested."),
                                             new FactResponseSay("You can try again with another number, or say give me a cat fact for a random cat fact")
                                         };
                                     }
-                                } else {
-                                    responses = GetFactResponses();
+                                    reprompt = new[] { new FactResponseHelp() };
                                 }
                                 break;
                             default:
@@ -132,14 +146,22 @@ namespace CatFacts {
                                 responses = new AFactResponse[] {};
                                 break;
                         }
-                        reprompt = new[] { new FactResponseHelp() };
+
+                        // Only keep session open if this is not a new session with an intent
+                        if(!skill.Session.New) {
+                            reprompt = new[] { new FactResponseHelp() };
+                        }
                     } else {
                         switch(intent.Intent.Name) {
 
                             // built-in intents
                             case BuiltInIntent.Help:
                                 LambdaLogger.Log($"*** INFO: built-in help intent ({intent.Intent.Name})\n");
-                                responses = new[] { new FactResponseHelp() };
+                                responses = new AFactResponse[] { 
+                                    new FactResponseSay("Cat Facts is a fun way to hear interesting facts about cats! You can request a random cat fact or ask for a specific cat fact by number. You can also say exit to leave Cat Facts at any time."),
+                                    new FactResponseHelp()
+                                };
+                                reprompt = new[] { new FactResponseHelp() };
                                 break;
 
                             case BuiltInIntent.Stop:
@@ -151,8 +173,11 @@ namespace CatFacts {
                             // unknown & unsupported intents
                             default:
                                 LambdaLogger.Log("*** WARNING: intent not recognized\n");
-                                responses = new[] { new FactResponseHelp() };
-                                reprompt = new[] { new FactResponseNotUnderstood() };
+                                responses = new AFactResponse[] { 
+                                    new FactResponseNotUnderstood(), 
+                                    new FactResponseHelp() 
+                                };
+                                reprompt = new[] { new FactResponseHelp() };
                                 break;
                         }
                     }
